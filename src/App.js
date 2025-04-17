@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { fetchAllBadplatser, fetchBadplatsById } from './components/havApi.js';
+import { Badplatser, fetchBadplatsById } from './components/havApi.js';
 
 function App() {
   const [dictionary, setDictionary] = useState(null); // State to store the dictionary
@@ -10,8 +10,9 @@ function App() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const dict = await fetchAllBadplatser(); // Fetch the dictionary
-      setDictionary(dict);
+      const badplatser = new Badplatser();
+      await badplatser.initializeBadplatserInstance(); // Initialize the instance
+      setDictionary(badplatser.getInstance()); // Fetch the dictionary
 
       const result = await fetchBadplatsById(badplatsId); // Fetch the specific badplats
       setBadplats(result);
@@ -39,9 +40,9 @@ function App() {
         <h2>Dictionary</h2>
         {dictionary ? (
           <ul>
-            {[...dictionary.entries()].map(([id, name]) => (
+            {[...dictionary.entries()].map(([id, [name, municipality]]) => (
               <li key={id}>
-                <strong>ID: </strong>{id}, <strong>Name: </strong>{name}
+                <strong>ID: </strong>{id}, <strong>Name: </strong>{name}, <strong>Municipality: </strong>{municipality}
               </li>
             ))}
           </ul>
