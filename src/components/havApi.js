@@ -29,6 +29,10 @@ export class Badplatser {
   getInstance() {
     return instance; // Return the cached instance
   }
+  
+  updateInstance() {
+    instance = this.initializeBadplatserInstance(); // Update the cached instance
+  }
 }
 
 // Function to fetch a specific badplats by ID
