@@ -1,5 +1,5 @@
+// havApi.js
 
-//
 export const fetchAllBadplatser = async () => {
   try {
     const response = await fetch('https://gw-test.havochvatten.se/external-public/bathing-waters/v2/bathing-waters');
@@ -8,20 +8,19 @@ export const fetchAllBadplatser = async () => {
     }
     const result = await response.json();
 
-    // Create a dictionary with id as the key and name as the value
+    // Create a Map with id as the key and bathingWater object as the value
     const dictionary = new Map();
-    (result.watersAndAdvisories || []).slice(0, 5).forEach((item) => {
-      dictionary.set(item.bathingWater.id, item.bathingWater.name);
+    (result.watersAndAdvisories || []).forEach((item) => {
+      dictionary.set(item.bathingWater.id, item.bathingWater);
     });
 
-    return dictionary; // Return the dictionary
+    return dictionary; // Return the Map
   } catch (error) {
     console.error('Error fetching data:', error);
-    return null; // Return null if an error occurs
+    return new Map(); // Return an empty Map if an error occurs
   }
 };
 
-// Function to fetch a specific badplats by ID
 export const fetchBadplatsById = async (id) => {
   try {
     const response = await fetch(`https://gw-test.havochvatten.se/external-public/bathing-waters/v2/bathing-waters/${id}`);
@@ -34,4 +33,26 @@ export const fetchBadplatsById = async (id) => {
     console.error('Error fetching specific badplats:', error);
     return null; // Return null if an error occurs
   }
+};
+
+export const extractMunicipalities = (badplatserMap) => {
+  const municipalitiesSet = new Set();
+
+  // Iterate through the Map and extract municipality names
+  badplatserMap.forEach((badplats) => {
+    if (badplats.municipality) {
+      municipalitiesSet.add(badplats.municipality.name);
+    }
+  });
+
+  return Array.from(municipalitiesSet).sort(); // Return sorted array of municipalities
+};
+
+export const filterBadplatserByMunicipality = (badplatserMap, municipality) => {
+  if (!municipality) return Array.from(badplatserMap.values()); // If no municipality is selected, return all badplatser
+
+  // Filter badplatser by the selected municipality
+  return Array.from(badplatserMap.values()).filter(
+    (item) => item.municipality && item.municipality.name === municipality
+  );
 };
