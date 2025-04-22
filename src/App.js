@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import './App.css';
 import Search from './components/Search';
 import MapView from './components/MapView';
@@ -87,9 +87,6 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-      </header>
       <nav>
         <button onClick={() => setCurrentView('search')}>Startsida</button>
         <button onClick={() => setCurrentView('map')}>Karta</button>

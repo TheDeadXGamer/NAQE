@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { fetchAllBadplatser } from './havApi';
+import {Badplatser} from './havApi';
 import 'leaflet/dist/leaflet.css';
 
 // configure default marker icons
@@ -12,6 +12,8 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const badplatser = new Badplatser();
+
 const MapView = () => {
     const [beaches, setBeaches] = useState([]);
     const [selectedBeach, setSelectedBeach] = useState(null);
@@ -19,7 +21,8 @@ const MapView = () => {
     useEffect(() => {
         // fetches all data
         const fetchData = async () => {
-            const data = await fetchAllBadplatser();
+            const data = badplatser.getInstance();
+            console.log('Fetched data:', data); // works fine
             setBeaches(data);
         };
         fetchData();
@@ -37,19 +40,20 @@ const MapView = () => {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="&copy; OpenStreetMap contributors"
                 />
-                {beaches.map((b) => {
-                    const pos = b.bathingWater?.samplingPointPosition;
-                    if (!pos) return null;
+                {Object.entries(beaches).map(([id, [name, municipality, samplingPointPosition]])  => {
+                    if (!samplingPointPosition) return null;
+                    console.log({ id, name, municipality, samplingPointPosition }); // Debugging log
+                    console.log("hej");
 
                     return (
                         <Marker
-                            key={b.bathingWater.id}
-                            position={[pos.latitude, pos.longitude]}
+                            key={id}
+                            position={[samplingPointPosition.latitude, samplingPointPosition.longitude]}
                             eventHandlers={{
-                                click: () => setSelectedBeach(b),
+                                click: () => setSelectedBeach({ id, name, municipality, samplingPointPosition }),
                             }}
                         >
-                            <Popup>{b.bathingWater.name}</Popup>
+                            <Popup>{name}</Popup>
                         </Marker>
                     );
                 })}
