@@ -4,106 +4,159 @@ import './App.css';
 import {Badplatser} from './components/havApi.js';
 
 function App() {
-  const [dictionary, setDictionary] = useState(null); // State to store the dictionary
+  const [badplatserMap, setBadplatserMap] = useState(new Map()); // State to store badplatser Map
+  const [municipalities, setMunicipalities] = useState([]); // State to store municipality names
+  const [selectedMunicipality, setSelectedMunicipality] = useState(''); // State for selected municipality
+  const [filteredBadplatser, setFilteredBadplatser] = useState([]); // State for filtered badplatser
   const [badplats, setBadplats] = useState(null); // State to store the fetched badplats
   const badplatsId = 'SE0A21407000003882'; // Example ID for the badplats
-
-  const [municipalityOptions, setMunicipalityOptions] = useState(null); // State to store municipality options
-  const [selectedMunicipality, setSelectedMunicipality] = useState(null); // State for selected municipality
-  const [municipalityBadplatser, setMunicipalityBadplatser] = useState([]); 
+  const [selectedAbnormalSituations, setSelectedAbnormalSituations] = useState(''); // State for abnormal situations filter
+  const [selectedAdviceAgainstBathing, setSelectedAdviceAgainstBathing] = useState(''); // State for advice against bathing filter
+  
+  const badplatser = new Badplatser();
 
   useEffect(() => {
     const fetchData = async () => {
-      const badplatser = new Badplatser();
       await badplatser.initializeBadplatserInstance(); // Initialize the instance
       setDictionary(badplatser.getInstance()); // Fetch the dictionary
+      setBadplatserMap(badplatser.getInstance()); 
 
       const result = await badplatser.fetchBadplatsById(badplatsId); // Fetch the specific badplats
       setBadplats(result);
 
-      const uniqueMunicipalities = new Set();
-      [...badplatser.getInstance()].map(([id, [name, municipality]]) => uniqueMunicipalities.add(municipality));
-      setMunicipalityOptions(uniqueMunicipalities)
+      const municipalitiesData = extractMunicipalities(badplatserData); // Extract municipalities
+      setMunicipalities(municipalitiesData); // Store municipalities in state
+
+      setFilteredBadplatser(Array.from(badplatserData.values())); // Initially show all badplatser
+
     };
 
     fetchData(); // Call the function
-  }, [badplatsId]);
+  }, []); // Only run once when the component mounts
+
+  const handleMunicipalityChange = (e) => {
+    const selected = e.target.value;
+    setSelectedMunicipality(selected);
+
+    // Filter badplatser by the selected municipality
+    const filtered = filterBadplatserByMunicipality(badplatser.getInstance(), selected);
+    setFilteredBadplatser(filtered);
+  };
+
+  const handleAbnormalSituationsChange = (e) => {
+    const selected = e.target.value;
+    setSelectedAbnormalSituations(selected);
+  };
+
+  const handleAdviceAgainstBathingChange = (e) => {
+    const selected = e.target.value;
+    setSelectedAdviceAgainstBathing(selected);
+  };
+
+  const filterBadplatser = () => {
+    let filtered = Array.from(badplatser.getInstance().values());
+
+    // Filter by municipality
+    if (selectedMunicipality) {
+      filtered = filterBadplatserByMunicipality(badplatserMap, selectedMunicipality);
+    }
+
+    // Filter by abnormal situations (Has / No abnormal situations)
+    if (selectedAbnormalSituations) {
+      if (selectedAbnormalSituations === 'has') {
+        filtered = filtered.filter(badplats => badplats.abnormalSituations && badplats.abnormalSituations.length > 0);
+      } else if (selectedAbnormalSituations === 'no') {
+        filtered = filtered.filter(badplats => !badplats.abnormalSituations || badplats.abnormalSituations.length === 0);
+      }
+    }
+
+    // Filter by advice against bathing (Has / No advice)
+    if (selectedAdviceAgainstBathing) {
+      if (selectedAdviceAgainstBathing === 'has') {
+        filtered = filtered.filter(badplats => badplats.adviceAgainstBathing && badplats.adviceAgainstBathing.length > 0);
+      } else if (selectedAdviceAgainstBathing === 'no') {
+        filtered = filtered.filter(badplats => !badplats.adviceAgainstBathing || badplats.adviceAgainstBathing.length === 0);
+      }
+    }
+
+    return filtered;
+  };
 
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        
-        <div id="searchContainer">
-          <label htmlFor="municipality">Municipality:</label>
-          <select
-            name="municipality"
-            id="municipality"
-            onChange={async (e) => {
-              const municipality = e.target.value;
-              setSelectedMunicipality(municipality);
 
-              const badplatser = new Badplatser();
-              const badplatserList = await badplatser.fetchMunicipalityBathingWaters(municipality);
-              setMunicipalityBadplatser(badplatserList);
-            }}
+
+        {/* Dropdown Menu for Municipality Selection */}
+        <h2>Municipality Selection</h2>
+        <select
+          value={selectedMunicipality}
+          onChange={handleMunicipalityChange}
+          disabled={municipalities.length === 0}
+        >
+          <option value="">All Municipalities</option>
+          {municipalities.map((municipality, index) => (
+            <option key={index} value={municipality}>
+              {municipality}
+            </option>
+          ))}
+        </select>
+        <h2>State of Badplats</h2>
+        <div className="filter-dropdowns">
+          {/* Abnormal Situations Dropdown */}
+          <select
+            value={selectedAbnormalSituations}
+            onChange={handleAbnormalSituationsChange}
+            disabled={badplatserMap.size === 0}
           >
-            {municipalityOptions ? (
-              [...municipalityOptions].map((municipality) => (
-                <option key={municipality} value={municipality}>
-                  {municipality}
-                </option>
-              ))
-            ) : (
-              <option value="">Loading...</option>
-            )}
+            <option value="">All Badplatser</option>
+            <option value="has">Has Abnormal Situations</option>
+            <option value="no">No Abnormal Situations</option>
+          </select>
+
+          {/* Advice Against Bathing Dropdown */}
+          <select
+            value={selectedAdviceAgainstBathing}
+            onChange={handleAdviceAgainstBathingChange}
+            disabled={badplatserMap.size === 0}
+          >
+            <option value="">All Badplatser</option>
+            <option value="has">Has Advice Against Bathing</option>
+            <option value="no">No Advice Against Bathing</option>
           </select>
         </div>
 
-        <h2>Badplatser in {selectedMunicipality}</h2>
-        {municipalityBadplatser.length > 0 ? (
+        {/* Display Filtered Badplatser */}
+        <h2>Filtered Badplatser</h2>
+        {filterBadplatser().length > 0 ? (
           <ul>
-            {municipalityBadplatser.map((badplats, index) => (
-              <li key={index}>
-                <strong>Name:</strong> {badplats.bathingWater.name} <br />
-                <strong>Description:</strong> {badplats.bathingWater.description} <br />
-                <strong>Coordinates:</strong> {badplats.bathingWater.samplingPointPosition.latitude}, {badplats.bathingWater.samplingPointPosition.longitude}
-              </li>
-            ))}
+            {filterBadplatser().map((badplats, index) => {
+              let displayText = badplats.name;
+
+              // Display situation if applicable
+              if (selectedAbnormalSituations === 'has' && badplats.abnormalSituations && badplats.abnormalSituations.length > 0) {
+                displayText += `, Situation: ${badplats.abnormalSituations.join(', ')}`;
+              } else if (selectedAbnormalSituations === 'no' && (!badplats.abnormalSituations || badplats.abnormalSituations.length === 0)) {
+                displayText += ', No abnormal situations';
+              }
+
+              // Display advice if applicable
+              if (selectedAdviceAgainstBathing === 'has' && badplats.adviceAgainstBathing && badplats.adviceAgainstBathing.length > 0) {
+                displayText += `, Advice: ${badplats.adviceAgainstBathing.join(', ')}`;
+              } else if (selectedAdviceAgainstBathing === 'no' && (!badplats.adviceAgainstBathing || badplats.adviceAgainstBathing.length === 0)) {
+                displayText += ', No advice against bathing';
+              }
+
+              return (
+                <li key={index}>
+                  <strong>{displayText}</strong>
+                </li>
+              );
+            })}
           </ul>
         ) : (
-          <p>No badplatser available for this municipality.</p>
-        )}
-        <h1>HaV API Example</h1>
-        <h2>Dictionary</h2>
-        {dictionary ? (
-          <ul>
-            {[...dictionary.entries()].map(([id, [name, municipality]]) => (
-              <li key={id}>
-                <strong>ID: </strong>{id}, <strong>Name: </strong>{name}, <strong>Municipality: </strong>{municipality}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Loading dictionary...</p>
-        )}
-        <h2>Specific Badplats</h2>
-        {badplats ? (
-          <div>
-            <h3>{badplats.bathingWater.name}</h3>
-            <p>{badplats.bathingWater.description}</p>
-            <p>
-              <strong>Municipality:</strong> {badplats.bathingWater.municipality.name}
-            </p>
-            <p>
-              <strong>Coordinates:</strong> {badplats.bathingWater.samplingPointPosition.latitude}, {badplats.bathingWater.samplingPointPosition.longitude}
-            </p>
-          </div>
-        ) : (
-          <p>Loading specific badplats...</p>
+          <p>No badplatser available with the selected filters.</p>
         )}
       </header>
     </div>

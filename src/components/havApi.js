@@ -74,5 +74,26 @@ export class Badplatser {
 
     return bathingWaters; // Return the array of bathing waters for the specific municipality
   };
-}
 
+  extractMunicipalities = (badplatserMap) => {
+    const municipalitiesSet = new Set();
+
+    // Iterate through the Map and extract municipality names
+    badplatserMap.forEach((badplats) => {
+      if (badplats.municipality) {
+        municipalitiesSet.add(badplats.municipality.name);
+    }
+  });
+
+  return Array.from(municipalitiesSet).sort(); // Return sorted array of municipalities
+};
+
+const filterBadplatserByMunicipality = (badplatserMap, municipality) => {
+  if (!municipality) return Array.from(badplatserMap.values()); // If no municipality is selected, return all badplatser
+
+  // Filter badplatser by the selected municipality
+  return Array.from(badplatserMap.values()).filter(
+    (item) => item.municipality && item.municipality.name === municipality
+  );
+};
+}
