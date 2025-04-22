@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '../logo.svg'; // justera vägen om din logga ligger annorlunda
 import '../App.css';
 
-const Home = () => {
+const Search = () => {
     return (
         <div className="home">
             <header className="App-header">
@@ -23,4 +23,4 @@ const Home = () => {
     );
 };
 
-export default Home;
+export default Search;
