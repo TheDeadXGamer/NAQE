@@ -18,16 +18,16 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       await badplatser.initializeBadplatserInstance(); // Initialize the instance
-      setDictionary(badplatser.getInstance()); // Fetch the dictionary
       setBadplatserMap(badplatser.getInstance()); 
 
       const result = await badplatser.fetchBadplatsById(badplatsId); // Fetch the specific badplats
       setBadplats(result);
 
-      const municipalitiesData = extractMunicipalities(badplatserData); // Extract municipalities
+      const municipalitiesData = badplatser.extractMunicipalities(badplatser.getInstance()); // Extract municipalities
+      console.log('Municipalities:', municipalitiesData); // Debugging log
       setMunicipalities(municipalitiesData); // Store municipalities in state
 
-      setFilteredBadplatser(Array.from(badplatserData.values())); // Initially show all badplatser
+      setFilteredBadplatser(Array.from(badplatser.getInstance().values())); // Initially show all badplatser
 
     };
 
@@ -39,7 +39,7 @@ function App() {
     setSelectedMunicipality(selected);
 
     // Filter badplatser by the selected municipality
-    const filtered = filterBadplatserByMunicipality(badplatser.getInstance(), selected);
+    const filtered = badplatser.filterBadplatserByMunicipality(badplatser.getInstance(), selected);
     setFilteredBadplatser(filtered);
   };
 
@@ -58,7 +58,7 @@ function App() {
 
     // Filter by municipality
     if (selectedMunicipality) {
-      filtered = filterBadplatserByMunicipality(badplatserMap, selectedMunicipality);
+      filtered = badplatser.filterBadplatserByMunicipality(badplatserMap, selectedMunicipality);
     }
 
     // Filter by abnormal situations (Has / No abnormal situations)
@@ -132,7 +132,7 @@ function App() {
         {filterBadplatser().length > 0 ? (
           <ul>
             {filterBadplatser().map((badplats, index) => {
-              let displayText = badplats.name;
+              let displayText = badplats[0]
 
               // Display situation if applicable
               if (selectedAbnormalSituations === 'has' && badplats.abnormalSituations && badplats.abnormalSituations.length > 0) {
