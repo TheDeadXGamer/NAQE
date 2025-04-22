@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import Search from './components/Search';
+import MapView from './components/MapView';
 import {Badplatser} from './components/havApi.js';
 
 function App() {
+  const [currentView, setCurrentView] = useState('search');
+  
   const [badplatserMap, setBadplatserMap] = useState(new Map()); // State to store badplatser Map
   const [municipalities, setMunicipalities] = useState([]); // State to store municipality names
   const [selectedMunicipality, setSelectedMunicipality] = useState(''); // State for selected municipality
@@ -86,8 +89,14 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-
-
+      </header>
+      <nav>
+        <button onClick={() => setCurrentView('search')}>Startsida</button>
+        <button onClick={() => setCurrentView('map')}>Karta</button>
+      </nav>
+      <main>
+        {currentView === 'search' && <Search />}
+        {currentView === 'map' && <MapView />}
         {/* Dropdown Menu for Municipality Selection */}
         <h2>Municipality Selection</h2>
         <select
@@ -158,7 +167,7 @@ function App() {
         ) : (
           <p>No badplatser available with the selected filters.</p>
         )}
-      </header>
+      </main>
     </div>
   );
 }
