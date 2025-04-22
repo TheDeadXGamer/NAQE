@@ -16,7 +16,7 @@ export class Badplatser {
 
       // Create a dictionary with id as the key and name as the value
       const dictionary = new Map();
-      (result.watersAndAdvisories || []).slice(0, 5).forEach((item) => {
+      (result.watersAndAdvisories || []).slice(0, 10).forEach((item) => {
         dictionary.set(item.bathingWater.id, [item.bathingWater.name, item.bathingWater.municipality.name]);
       });
 
@@ -30,9 +30,9 @@ export class Badplatser {
     return instance; // Return the cached instance
   }
 
-  updateInstance() {
+  async updateInstance() {
     instance = null;
-    instance = this.initializeBadplatserInstance(); // Update the cached instance
+    instance = await this.initializeBadplatserInstance(); // Update the cached instance
   }
 
   // Function to fetch a specific badplats by ID
@@ -57,7 +57,7 @@ export class Badplatser {
       return bathingWaters; // Return an empty array if instance is not initialized
     }
 
-    for (const [id, [name, municipality]] of instance.entries()) {
+    for (const [id, [_name, municipality]] of instance.entries()) {
       if (municipality === wantedMunicipality) {
         try {
           const response = await fetch(`https://gw-test.havochvatten.se/external-public/bathing-waters/v2/bathing-waters/${id}`);
@@ -79,21 +79,26 @@ export class Badplatser {
     const municipalitiesSet = new Set();
 
     // Iterate through the Map and extract municipality names
-    badplatserMap.forEach((badplats) => {
-      if (badplats.municipality) {
-        municipalitiesSet.add(badplats.municipality.name);
-    }
-  });
+    badplatserMap.forEach(([_name, municipality]) => {
+      if (municipality) {
+        municipalitiesSet.add(municipality);
+      }
+    });
 
-  return Array.from(municipalitiesSet).sort(); // Return sorted array of municipalities
-};
+    return Array.from(municipalitiesSet).sort(); // Return sorted array of municipalities
+  };
 
-const filterBadplatserByMunicipality = (badplatserMap, municipality) => {
-  if (!municipality) return Array.from(badplatserMap.values()); // If no municipality is selected, return all badplatser
+  filterBadplatserByMunicipality = (badplatserMap, selectedMunicipality) => {
+    if (!selectedMunicipality) return Array.from(badplatserMap.values()); // If no municipality is selected, return all badplatser
 
-  // Filter badplatser by the selected municipality
-  return Array.from(badplatserMap.values()).filter(
-    (item) => item.municipality && item.municipality.name === municipality
-  );
-};
+    console.log(Array.from(badplatserMap.values()));
+    console.log(Array.from(badplatserMap.values()).filter(
+      ([, municipality]) => municipality === selectedMunicipality
+    ));
+
+    // Filter badplatser by the selected municipality
+    return Array.from(badplatserMap.values()).filter(
+      ([, municipality]) => municipality === selectedMunicipality
+    );
+  };
 }
