@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { fetchAllBadplatser, fetchBadplatsById, extractMunicipalities, filterBadplatserByMunicipality } from './components/havApi.js';
+import {Badplatser} from './components/havApi.js';
 
 function App() {
   const [badplatserMap, setBadplatserMap] = useState(new Map()); // State to store badplatser Map
@@ -12,19 +12,23 @@ function App() {
   const badplatsId = 'SE0A21407000003882'; // Example ID for the badplats
   const [selectedAbnormalSituations, setSelectedAbnormalSituations] = useState(''); // State for abnormal situations filter
   const [selectedAdviceAgainstBathing, setSelectedAdviceAgainstBathing] = useState(''); // State for advice against bathing filter
+  
+  const badplatser = new Badplatser();
 
   useEffect(() => {
     const fetchData = async () => {
-      const badplatserData = await fetchAllBadplatser(); // Fetch all badplatser (as Map)
-      setBadplatserMap(badplatserData); // Store badplatser Map in state
+      await badplatser.initializeBadplatserInstance(); // Initialize the instance
+      setDictionary(badplatser.getInstance()); // Fetch the dictionary
+      setBadplatserMap(badplatser.getInstance()); 
 
-      const result = await fetchBadplatsById(badplatsId); // Fetch the specific badplats
+      const result = await badplatser.fetchBadplatsById(badplatsId); // Fetch the specific badplats
       setBadplats(result);
 
       const municipalitiesData = extractMunicipalities(badplatserData); // Extract municipalities
       setMunicipalities(municipalitiesData); // Store municipalities in state
 
       setFilteredBadplatser(Array.from(badplatserData.values())); // Initially show all badplatser
+
     };
 
     fetchData(); // Call the function
@@ -35,7 +39,7 @@ function App() {
     setSelectedMunicipality(selected);
 
     // Filter badplatser by the selected municipality
-    const filtered = filterBadplatserByMunicipality(badplatserMap, selected);
+    const filtered = filterBadplatserByMunicipality(badplatser.getInstance(), selected);
     setFilteredBadplatser(filtered);
   };
 
@@ -50,7 +54,7 @@ function App() {
   };
 
   const filterBadplatser = () => {
-    let filtered = Array.from(badplatserMap.values());
+    let filtered = Array.from(badplatser.getInstance().values());
 
     // Filter by municipality
     if (selectedMunicipality) {
@@ -82,7 +86,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>Edit <code>src/App.js</code> and save to reload.</p>
+
 
         {/* Dropdown Menu for Municipality Selection */}
         <h2>Municipality Selection</h2>
@@ -153,34 +157,6 @@ function App() {
           </ul>
         ) : (
           <p>No badplatser available with the selected filters.</p>
-        )}
-        <h2>Badplatser</h2>
-        {badplatserMap ? (
-          <ul>
-            {[...badplatserMap.entries()].map(([id, badplats]) => (
-              <li key={id}>
-                <strong>ID: </strong>{id}, <strong>Name: </strong>{badplats.name}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Loading badplatser...</p>
-        )}
-        {/* Display Specific Badplats */}
-        <h2>Specific Badplats</h2>
-        {badplats ? (
-          <div>
-            <h3>{badplats.bathingWater.name}</h3>
-            <p>{badplats.bathingWater.description}</p>
-            <p>
-              <strong>Municipality:</strong> {badplats.bathingWater.municipality.name}
-            </p>
-            <p>
-              <strong>Coordinates:</strong> {badplats.bathingWater.samplingPointPosition.latitude}, {badplats.bathingWater.samplingPointPosition.longitude}
-            </p>
-          </div>
-        ) : (
-          <p>Loading specific badplats...</p>
         )}
       </header>
     </div>
