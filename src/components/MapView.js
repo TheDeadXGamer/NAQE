@@ -13,7 +13,6 @@ L.Icon.Default.mergeOptions({
 
 const MapView = () => {
   const [beaches, setBeaches] = useState([]);
-  const [selectedBeach, setSelectedBeach] = useState(null);
   const badplatser = new Badplatser();
 
   useEffect(() => {
@@ -42,29 +41,48 @@ const MapView = () => {
         {beaches.map(({ id, name, municipality, position }) => {
           if (!position) return null;
           return (
-            <Marker
-              key={id}
-              position={[position.latitude, position.longitude]}
-              eventHandlers={{
-                click: () => setSelectedBeach({ id, name, municipality, position }),
-              }}
-            >
-              <Popup>{name}</Popup>
+            <Marker key={id} position={[position.latitude, position.longitude]}>
+              <Popup>
+                <BeachPopupContent id={id} name={name} municipality={municipality} position={position} />
+              </Popup>
             </Marker>
           );
         })}
       </MapContainer>
+    </div>
+  );
+};
 
-      {selectedBeach && (
-        <div className="info-box">
-          <h2>{selectedBeach.name}</h2>
-          <p>
-            <strong>Kommun:</strong> {selectedBeach.municipality}
-          </p>
-          <p>
-            <strong>Koordinater:</strong> {selectedBeach.position.latitude}, {selectedBeach.position.longitude}
-          </p>
-        </div>
+const BeachPopupContent = ({ id, name, municipality, position }) => {
+  const [results, setResults] = useState(null);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      const badplatser = new Badplatser();
+      const res = await badplatser.fetchResultsById(id);
+      setResults(res.length > 0 ? res[0] : null);
+    };
+    fetchResults();
+  }, [id]);
+
+  return (
+    <div>
+      <h3>{name}</h3>
+      <p><strong>Kommun:</strong> {municipality}</p>
+      <p><strong>Koordinater:</strong> {position.latitude}, {position.longitude}</p>
+      {results ? (
+        <>
+          <p><strong>Senaste prov:</strong> {new Date(results.takenAt).toLocaleDateString()}</p>
+          <p><strong>Vattentemp:</strong> {results.waterTemp} °C</p>
+          <p><strong>E. coli:</strong> {results.escherichiaColiPrefix}{results.escherichiaColiCount} ({results.escherichiaColiAssessIdText})</p>
+          <p><strong>Enterokocker:</strong> {results.intestinalEnterococciPrefix}{results.intestinalEnterococciCount} ({results.intestinalEnterococciAssessIdText})</p>
+          <p><strong>Bedömning:</strong> {results.sampleAssessIdText}</p>
+          {results.pollutionTypeIdText && (
+            <p><strong>Föroreningar:</strong> {results.pollutionTypeIdText}</p>
+          )}
+        </>
+      ) : (
+        <p>Laddar data...</p>
       )}
     </div>
   );

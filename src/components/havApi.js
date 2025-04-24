@@ -50,6 +50,20 @@ export class Badplatser {
     }
   };
 
+  async fetchResultsById(id) {
+    try {
+      const response = await fetch(`https://gw-test.havochvatten.se/external-public/bathing-waters/v2/bathing-waters/${id}/results`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch results for ID: ${id}`);
+      }
+      const result = await response.json();
+      return result.results; // array
+    } catch (error) {
+      console.error('Error fetching monitoring results:', error);
+      return [];
+    }
+  }
+
   async fetchMunicipalityBathingWaters(wantedMunicipality) {
     const bathingWaters = [];
     if (!instance) {
