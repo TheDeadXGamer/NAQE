@@ -10,8 +10,14 @@ function App() {
   return (
     <div className="App">
       <nav>
-        <button onClick={() => setCurrentView('map')}>Karta</button>
-        <button onClick={() => setCurrentView('search')}>Sök</button>
+        <button onClick={() => setCurrentView('map')}
+          className={currentView === 'map' ? 'active' : ''}
+        >Karta
+        </button>
+        <button onClick={() => setCurrentView('search')}
+          className={currentView === 'search' ? 'active' : ''}
+        >Sök
+        </button>
       </nav>
       <main>
         {currentView === 'search' && <Search />}
