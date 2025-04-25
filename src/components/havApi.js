@@ -17,7 +17,7 @@ export class Badplatser {
       // Create a dictionary with id as the key and name as the value
       const dictionary = new Map();
       (result.watersAndAdvisories || []).slice(0, 10).forEach((item) => {
-        dictionary.set(item.bathingWater.id, [item.bathingWater.name, item.bathingWater.municipality.name]);
+        dictionary.set(item.bathingWater.id, [item.bathingWater.name, item.bathingWater.municipality.name, item.bathingWater?.samplingPointPosition]);
       });
 
       instance = dictionary; // Cache the dictionary
@@ -49,6 +49,20 @@ export class Badplatser {
       return null; // Return null if an error occurs
     }
   };
+
+  async fetchResultsById(id) {
+    try {
+      const response = await fetch(`https://gw-test.havochvatten.se/external-public/bathing-waters/v2/bathing-waters/${id}/results`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch results for ID: ${id}`);
+      }
+      const result = await response.json();
+      return result.results; // array
+    } catch (error) {
+      console.error('Error fetching monitoring results:', error);
+      return [];
+    }
+  }
 
   async fetchMunicipalityBathingWaters(wantedMunicipality) {
     const bathingWaters = [];
