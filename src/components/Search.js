@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import logo from '../logo.svg'; // justera vägen om din logga ligger annorlunda
 import '../App.css';
 import { Badplatser } from './havApi';
+import { useFavorites } from '../context/FavouritesContext'; 
 
 const Search = () => {
 
@@ -14,13 +15,15 @@ const Search = () => {
     const [selectedAbnormalSituations, setSelectedAbnormalSituations] = useState(''); // State for abnormal situations filter
     const [selectedAdviceAgainstBathing, setSelectedAdviceAgainstBathing] = useState(''); // State for advice against bathing filter
     
+    const { favorites, addFavorite, removeFavorite } = useFavorites();
+
     const badplatser = new Badplatser();
 
     useEffect(() => {
         const fetchData = async () => {
           await badplatser.initializeBadplatserInstance(); // Initialize the instance
           setBadplatserMap(badplatser.getInstance()); 
-    
+
           const result = await badplatser.fetchBadplatsById(badplatsId); // Fetch the specific badplats
           setBadplats(result);
     
@@ -83,6 +86,8 @@ const Search = () => {
         return filtered;
       };
 
+      const isFavorite = (id) => favorites.some((item) => item.id === id);
+
     return (
         <div className="search">
             {/* Dropdown Menu for Municipality Selection */}
@@ -129,7 +134,12 @@ const Search = () => {
             {filterBadplatser().length > 0 ? (
             <ul>
                 {filterBadplatser().map((badplats, index) => {
-                let displayText = badplats[0]
+                const id = badplats[0];
+                const name = badplats[0];
+                const municipality = badplats[1];
+                const position = badplats[2];
+                
+                let displayText = name
 
                 // Display situation if applicable
                 if (selectedAbnormalSituations === 'has' && badplats.abnormalSituations && badplats.abnormalSituations.length > 0) {
@@ -148,6 +158,16 @@ const Search = () => {
                 return (
                     <li key={index}>
                     <strong>{displayText}</strong>
+                    <button
+                      className="search-favorites-button"
+                      onClick={() =>
+                          isFavorite(id)
+                              ? removeFavorite(id)
+                              : addFavorite({ id, name, municipality, position })
+                      }
+                    >
+                        {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
+                    </button>
                     </li>
                 );
                 })}

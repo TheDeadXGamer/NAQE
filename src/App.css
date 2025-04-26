@@ -67,3 +67,28 @@ button.active {
   color: white;
   box-shadow: 0 5px #666;
 }
+
+.search-favorites-button {
+  background-color: #555555; /* Black */
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 10px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+
+.search-favorites-button:hover {
+  background-color: #04AA6D; /* Green */
+  color: white;
+  box-shadow: 0 5px #666;
+}
+
+.search-favorites-button:active {
+  background-color: #04AA6D; /* Green */
+  color: white;
+  box-shadow: 0 5px #666;
+}
