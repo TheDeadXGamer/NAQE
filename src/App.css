@@ -36,3 +36,34 @@
     transform: rotate(360deg);
   }
 }
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  background-color: #555555; /* Black */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #04AA6D; /* Green */
+  color: white;
+  box-shadow: 0 5px #666;
+}
+
+button.active {
+  background-color: #04AA6D; /* Green */
+  color: white;
+  box-shadow: 0 5px #666;
+}
