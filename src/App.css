@@ -72,6 +72,11 @@ button.loggedOut {
   opacity: 0;
 }
 
+button.loggedOut:hover {
+  cursor: default;
+  pointer-events: none;
+}
+
 .search-favorites-button {
   background-color: #555555; /* Black */
   border: none;

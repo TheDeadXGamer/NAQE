@@ -21,11 +21,11 @@ function App() {
           className={currentView === 'search' ? 'active' : ''}
         >Sök
         </button>
-        <button onClick={() => setCurrentView('favourites')}
+        <button onClick={() => {if (isLoggedIn) {setCurrentView('favourites')}}}
           className={`${currentView === 'favourites' ? 'active' : ''} ${isLoggedIn === null ? 'loggedOut' : ''}`.trim()}
         >Favoriter
         </button>
-        <button onClick={() => { setCurrentView('login'); setIsLoggedIn(null); }}
+        <button onClick={() => { if(isLoggedIn){ setCurrentView('login'); setIsLoggedIn(null);} }}
           className={isLoggedIn === null ? 'loggedOut' : ''}
         >Logga ut
         </button>
