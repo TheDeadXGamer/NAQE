@@ -68,6 +68,10 @@ button.active {
   box-shadow: 0 5px #666;
 }
 
+button.loggedOut {
+  opacity: 0;
+}
+
 .search-favorites-button {
   background-color: #555555; /* Black */
   border: none;
