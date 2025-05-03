@@ -3,6 +3,7 @@ import './App.css';
 import Search from './components/Search';
 import MapView from './components/MapView';
 import Favourites from './components/Favourites';
+import RecentPlaces from './components/RecentPlaces';
 
 
 function App() {
@@ -23,11 +24,16 @@ function App() {
           className={currentView === 'favourites' ? 'active' : ''}
         >Favoriter
         </button>
+        <button onClick={() => setCurrentView('recentPlaces')} 
+        className={currentView === 'recentPlaces' ? 'active' : ''}
+        >Senast Visade
+        </button>
       </nav>
       <main>
         {currentView === 'search' && <Search />}
         {currentView === 'map' && <MapView />}
         {currentView === 'favourites' && <Favourites />}
+        {currentView === 'recentPlaces' && <RecentPlaces />}
       </main>
     </div>
   );
