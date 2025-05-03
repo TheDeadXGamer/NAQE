@@ -1,15 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { Badplatser } from './havApi';
 import 'leaflet/dist/leaflet.css';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+// Custom icons
+const greenIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
+
+const yellowIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const redIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const blueIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+// Icon picker
+const getIconByAssessment = (assessment) => {
+  if (!assessment) return blueIcon;
+  const normalized = assessment.trim().toLowerCase();
+  switch (normalized) {
+    case 'tjänligt':
+      return greenIcon;
+    case 'tjänligt m. anm.':
+      return yellowIcon;
+    case 'otjänligt':
+      return redIcon;
+    default:
+      return blueIcon;
+  }
+};
 
 const MapView = () => {
   const [beaches, setBeaches] = useState([]);
@@ -19,12 +66,20 @@ const MapView = () => {
     const fetchData = async () => {
       await badplatser.initializeBadplatserInstance();
       const mapInstance = badplatser.getInstance();
-      const beachArray = Array.from(mapInstance.entries()).map(([id, [name, municipality, position]]) => ({
-        id,
-        name,
-        municipality,
-        position,
-      }));
+      const beachArray = await Promise.all(
+        Array.from(mapInstance.entries()).map(async ([id, [name, municipality, position]]) => {
+          const results = await badplatser.fetchResultsById(id);
+          const latestResult = results.length > 0 ? results[0] : null;
+          const assessment = latestResult?.sampleAssessIdText || null;
+          return {
+            id,
+            name,
+            municipality,
+            position,
+            assessment,
+          };
+        })
+      );
       setBeaches(beachArray);
     };
     fetchData();
@@ -38,16 +93,28 @@ const MapView = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        {beaches.map(({ id, name, municipality, position }) => {
-          if (!position) return null;
-          return (
-            <Marker key={id} position={[position.latitude, position.longitude]}>
-              <Popup>
-                <BeachPopupContent id={id} name={name} municipality={municipality} position={position} />
-              </Popup>
-            </Marker>
-          );
-        })}
+        <MarkerClusterGroup chunkedLoading>
+          {beaches.map(({ id, name, municipality, position, assessment }) => {
+            if (!position) return null;
+            const icon = getIconByAssessment(assessment);
+            return (
+              <Marker
+                key={id}
+                position={[position.latitude, position.longitude]}
+                icon={icon}
+              >
+                <Popup>
+                  <BeachPopupContent
+                    id={id}
+                    name={name}
+                    municipality={municipality}
+                    position={position}
+                  />
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );
