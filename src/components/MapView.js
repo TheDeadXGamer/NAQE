@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { Badplatser } from './havApi';
 import 'leaflet/dist/leaflet.css';
 import { useFavorites } from '../context/FavouritesContext'; 
+import { useRecentPlaces } from '../context/RecentPlacesContext';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -58,6 +59,7 @@ const BeachPopupContent = ({ id, name, municipality, position }) => {
   const [results, setResults] = useState(null);
 
   const { favorites, addFavorite, removeFavorite } = useFavorites();
+  const { addRecentPlace } = useRecentPlaces();
 
   const isFavorite = (id) => favorites.some((item) => item.id === id);
 
@@ -66,6 +68,8 @@ const BeachPopupContent = ({ id, name, municipality, position }) => {
       const badplatser = new Badplatser();
       const res = await badplatser.fetchResultsById(id);
       setResults(res.length > 0 ? res[0] : null);
+
+      addRecentPlace({ id, name, municipality, position, stats: res.length > 0 ? res[0] : null });
     };
     fetchResults();
   }, [id]);
