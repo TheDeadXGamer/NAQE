@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Badplatser } from './havApi';
 import 'leaflet/dist/leaflet.css';
+import { useFavorites } from '../context/FavouritesContext'; 
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -56,6 +57,10 @@ const MapView = () => {
 const BeachPopupContent = ({ id, name, municipality, position }) => {
   const [results, setResults] = useState(null);
 
+  const { favorites, addFavorite, removeFavorite } = useFavorites();
+
+  const isFavorite = (id) => favorites.some((item) => item.id === id);
+
   useEffect(() => {
     const fetchResults = async () => {
       const badplatser = new Badplatser();
@@ -80,6 +85,22 @@ const BeachPopupContent = ({ id, name, municipality, position }) => {
           {results.pollutionTypeIdText && (
             <p><strong>Föroreningar:</strong> {results.pollutionTypeIdText}</p>
           )}
+          <button
+            onClick={() =>
+              isFavorite(id)
+                ? removeFavorite(id)
+                : addFavorite({
+                    id,
+                    name,
+                    municipality,
+                    position,
+                    stats: results,
+                  })
+        }
+  disabled={!results} // Disable button if stats are not yet loaded
+>
+  {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
+</button>
         </>
       ) : (
         <p>Laddar data...</p>

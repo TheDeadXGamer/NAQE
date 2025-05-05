@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import logo from '../logo.svg'; // justera vägen om din logga ligger annorlunda
 import '../App.css';
 import { Badplatser } from './havApi';
+import { useFavorites } from '../context/FavouritesContext'; 
 
 const Search = () => {
 
@@ -14,13 +15,15 @@ const Search = () => {
     const [selectedAbnormalSituations, setSelectedAbnormalSituations] = useState(''); // State for abnormal situations filter
     const [selectedAdviceAgainstBathing, setSelectedAdviceAgainstBathing] = useState(''); // State for advice against bathing filter
     
+    const { favorites, addFavorite, removeFavorite } = useFavorites();
+
     const badplatser = new Badplatser();
 
     useEffect(() => {
         const fetchData = async () => {
           await badplatser.initializeBadplatserInstance(); // Initialize the instance
           setBadplatserMap(badplatser.getInstance()); 
-    
+
           const result = await badplatser.fetchBadplatsById(badplatsId); // Fetch the specific badplats
           setBadplats(result);
     
@@ -34,6 +37,21 @@ const Search = () => {
     
         fetchData(); // Call the function
       }, []); // Only run once when the component mounts
+
+      const FavoriteButton = React.memo(({ id, name, municipality, position, isFavorite, addFavorite, removeFavorite }) => {
+        return (
+            <button
+                className="search-favorites-button"
+                onClick={() =>
+                    isFavorite(id)
+                        ? removeFavorite(id)
+                        : addFavorite({ id, name, municipality, position })
+                }
+            >
+                {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
+            </button>
+        );
+    });
     
       const handleMunicipalityChange = (e) => {
         const selected = e.target.value;
@@ -83,6 +101,8 @@ const Search = () => {
         return filtered;
       };
 
+      const isFavorite = (id) => favorites.some((item) => item.id === id);
+
     return (
         <div className="search">
             {/* Dropdown Menu for Municipality Selection */}
@@ -129,7 +149,10 @@ const Search = () => {
             {filterBadplatser().length > 0 ? (
             <ul>
                 {filterBadplatser().map((badplats, index) => {
-                let displayText = badplats[0]
+                const id = Array.from(badplatserMap.keys())[index]; // Get the actual ID from the Map keys
+                const [name, municipality, position] = badplats; // Destructure the values from the Map entry
+                
+                let displayText = name
 
                 // Display situation if applicable
                 if (selectedAbnormalSituations === 'has' && badplats.abnormalSituations && badplats.abnormalSituations.length > 0) {
@@ -146,10 +169,19 @@ const Search = () => {
                 }
 
                 return (
-                    <li key={index}>
-                    <strong>{displayText}</strong>
-                    </li>
-                );
+                  <li key={id}>
+                      <strong>{displayText}</strong>
+                      <FavoriteButton
+                          id={id}
+                          name={name}
+                          municipality={municipality}
+                          position={position}
+                          isFavorite={isFavorite}
+                          addFavorite={addFavorite}
+                          removeFavorite={removeFavorite}
+                      />
+                  </li>
+                  );
                 })}
             </ul>
             ) : (

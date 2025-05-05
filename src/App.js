@@ -1,7 +1,8 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState} from 'react';
 import './App.css';
 import Search from './components/Search';
 import MapView from './components/MapView';
+import Favourites from './components/Favourites';
 
 
 function App() {
@@ -18,10 +19,15 @@ function App() {
           className={currentView === 'search' ? 'active' : ''}
         >Sök
         </button>
+        <button onClick={() => setCurrentView('favourites')}
+          className={currentView === 'favourites' ? 'active' : ''}
+        >Favoriter
+        </button>
       </nav>
       <main>
         {currentView === 'search' && <Search />}
         {currentView === 'map' && <MapView />}
+        {currentView === 'favourites' && <Favourites />}
       </main>
     </div>
   );
