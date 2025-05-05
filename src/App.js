@@ -3,6 +3,7 @@ import './App.css';
 import Search from './components/Search';
 import MapView from './components/MapView';
 import Favourites from './components/Favourites';
+import RecentPlaces from './components/RecentPlaces';
 import Login from './components/Login';
 
 
@@ -25,16 +26,21 @@ function App() {
           className={`${currentView === 'favourites' ? 'active' : ''} ${isLoggedIn === null ? 'loggedOut' : ''}`.trim()}
         >Favoriter
         </button>
+        <button onClick={() => setCurrentView('recentPlaces')} 
+        className={`${currentView === 'recentPlaces' ? 'active' : ''} ${isLoggedIn === null ? 'loggedOut' : ''}`.trim()}
+        >Senast Visade
+        </button>
         <button onClick={() => { if(isLoggedIn){ setCurrentView('login'); setIsLoggedIn(null);} }}
           className={isLoggedIn === null ? 'loggedOut' : ''}
         >Logga ut
         </button>
       </nav>
       <main>
+        {currentView === 'login' && <Login setIsLoggedIn={setIsLoggedIn} setCurrentView={setCurrentView} />}
         {currentView === 'search' && <Search />}
         {currentView === 'map' && <MapView />}
         {currentView === 'favourites' && <Favourites />}
-        {currentView === 'login' && <Login setIsLoggedIn={setIsLoggedIn} setCurrentView={setCurrentView} />}
+        {currentView === 'recentPlaces' && <RecentPlaces />}
       </main>
     </div>
   );

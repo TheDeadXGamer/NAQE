@@ -5,12 +5,15 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'leaflet/dist/leaflet.css';
 import { FavoritesProvider } from './context/FavouritesContext';
+import { RecentPlacesProvider } from './context/RecentPlacesContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
       <FavoritesProvider>
-        <App />
+        <RecentPlacesProvider>
+          <App />
+        </RecentPlacesProvider>
       </FavoritesProvider>
     </React.StrictMode>
 );
