@@ -37,6 +37,21 @@ const Search = () => {
     
         fetchData(); // Call the function
       }, []); // Only run once when the component mounts
+
+      const FavoriteButton = React.memo(({ id, name, municipality, position, isFavorite, addFavorite, removeFavorite }) => {
+        return (
+            <button
+                className="search-favorites-button"
+                onClick={() =>
+                    isFavorite(id)
+                        ? removeFavorite(id)
+                        : addFavorite({ id, name, municipality, position })
+                }
+            >
+                {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
+            </button>
+        );
+    });
     
       const handleMunicipalityChange = (e) => {
         const selected = e.target.value;
@@ -134,10 +149,8 @@ const Search = () => {
             {filterBadplatser().length > 0 ? (
             <ul>
                 {filterBadplatser().map((badplats, index) => {
-                const id = badplats[0];
-                const name = badplats[0];
-                const municipality = badplats[1];
-                const position = badplats[2];
+                const id = Array.from(badplatserMap.keys())[index]; // Get the actual ID from the Map keys
+                const [name, municipality, position] = badplats; // Destructure the values from the Map entry
                 
                 let displayText = name
 
@@ -156,20 +169,19 @@ const Search = () => {
                 }
 
                 return (
-                    <li key={index}>
-                    <strong>{displayText}</strong>
-                    <button
-                      className="search-favorites-button"
-                      onClick={() =>
-                          isFavorite(id)
-                              ? removeFavorite(id)
-                              : addFavorite({ id, name, municipality, position })
-                      }
-                    >
-                        {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
-                    </button>
-                    </li>
-                );
+                  <li key={id}>
+                      <strong>{displayText}</strong>
+                      <FavoriteButton
+                          id={id}
+                          name={name}
+                          municipality={municipality}
+                          position={position}
+                          isFavorite={isFavorite}
+                          addFavorite={addFavorite}
+                          removeFavorite={removeFavorite}
+                      />
+                  </li>
+                  );
                 })}
             </ul>
             ) : (
