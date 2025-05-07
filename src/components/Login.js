@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { setCookie, checkLogin, setFavorites } from './AccountCookies';
+import { setCookie, checkLogin, saveFavorites, retrieveFavorites } from './AccountCookies';
 
 const Login = ({ setIsLoggedIn , setCurrentView}) => {
     const [username, setUsername] = useState('');
@@ -10,6 +10,7 @@ const Login = ({ setIsLoggedIn , setCurrentView}) => {
         // Placeholder for login logic
         if (checkLogin(username, password)) {
             setIsLoggedIn(username);
+            retrieveFavorites(username); // Retrieve favorites from localStorage
             setCurrentView('map'); // Redirect to map view on successful login
             alert(`Logged in as ${username}`);
         } else {
@@ -20,7 +21,6 @@ const Login = ({ setIsLoggedIn , setCurrentView}) => {
     const handleCreateAccount = () => {
         // Set a cookie for the new account
         setCookie(username, password);
-        setFavorites(username, new Uint8Array(4330)); // Initialize favorites in localStorage
         alert(`Account created for ${username}`);
     };
 

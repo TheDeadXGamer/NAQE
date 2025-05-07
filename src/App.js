@@ -6,6 +6,8 @@ import Favourites from './components/Favourites';
 import RecentPlaces from './components/RecentPlaces';
 import Login from './components/Login';
 
+import { saveFavorites } from './components/AccountCookies';
+
 
 function App() {
   const [currentView, setCurrentView] = useState('login'); // Default view is 'login'
@@ -30,7 +32,7 @@ function App() {
         className={`${currentView === 'recentPlaces' ? 'active' : ''} ${isLoggedIn === null ? 'loggedOut' : ''}`.trim()}
         >Senast Visade
         </button>
-        <button onClick={() => { if(isLoggedIn){ setCurrentView('login'); setIsLoggedIn(null);} }}
+        <button onClick={() => { if(isLoggedIn){ saveFavorites(isLoggedIn); setCurrentView('login'); setIsLoggedIn(null); } }}
           className={isLoggedIn === null ? 'loggedOut' : ''}
         >Logga ut
         </button>
