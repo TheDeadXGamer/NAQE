@@ -4,7 +4,11 @@ import '../App.css';
 import { Badplatser } from './havApi';
 import { useFavorites } from '../context/FavouritesContext'; 
 
-const Search = () => {
+/** @param {Object} props - The component props.
+ * @param {Badplatser} props.badplatser - The Badplatser instance.
+ * @returns {JSX.Element} The Search component.
+**/
+const Search = ({badplatser}) => {
 
     const [badplatserMap, setBadplatserMap] = useState(new Map()); // State to store badplatser Map
     const [municipalities, setMunicipalities] = useState([]); // State to store municipality names
@@ -17,18 +21,15 @@ const Search = () => {
     
     const { favorites, addFavorite, removeFavorite } = useFavorites();
 
-    const badplatser = new Badplatser();
 
     useEffect(() => {
         const fetchData = async () => {
-          await badplatser.initializeBadplatserInstance(); // Initialize the instance
           setBadplatserMap(badplatser.getInstance()); 
 
           const result = await badplatser.fetchBadplatsById(badplatsId); // Fetch the specific badplats
           setBadplats(result);
     
           const municipalitiesData = badplatser.extractMunicipalities(badplatser.getInstance()); // Extract municipalities
-          console.log('Municipalities:', municipalitiesData); // Debugging log
           setMunicipalities(municipalitiesData); // Store municipalities in state
     
           setFilteredBadplatser(Array.from(badplatser.getInstance().values())); // Initially show all badplatser
