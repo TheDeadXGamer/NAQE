@@ -5,7 +5,7 @@ import L from 'leaflet';
 import { Badplatser } from './havApi';
 import 'leaflet/dist/leaflet.css';
 
-// Custom icons
+// Marker icons
 const greenIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -42,9 +42,17 @@ const blueIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-// Icon picker
+const grayIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const getIconByAssessment = (assessment) => {
-  if (!assessment) return blueIcon;
+  if (!assessment) return grayIcon;
   const normalized = assessment.trim().toLowerCase();
   switch (normalized) {
     case 'tjänligt':
@@ -66,22 +74,37 @@ const MapView = () => {
     const fetchData = async () => {
       await badplatser.initializeBadplatserInstance();
       const mapInstance = badplatser.getInstance();
-      const beachArray = await Promise.all(
-        Array.from(mapInstance.entries()).map(async ([id, [name, municipality, position]]) => {
-          const results = await badplatser.fetchResultsById(id);
-          const latestResult = results.length > 0 ? results[0] : null;
-          const assessment = latestResult?.sampleAssessIdText || null;
-          return {
-            id,
-            name,
-            municipality,
-            position,
-            assessment,
-          };
+
+      const initialBeachArray = Array.from(mapInstance.entries()).map(
+        ([id, [name, municipality, position]]) => ({
+          id,
+          name,
+          municipality,
+          position,
+          assessment: null,
         })
       );
-      setBeaches(beachArray);
+
+      setBeaches(initialBeachArray);
+
+      // Progressive fetching of assessments
+      for (const beach of initialBeachArray) {
+        try {
+          const results = await badplatser.fetchResultsById(beach.id);
+          const latestResult = results.length > 0 ? results[0] : null;
+          const updatedAssessment = latestResult?.sampleAssessIdText || null;
+
+          setBeaches((prev) =>
+            prev.map((b) =>
+              b.id === beach.id ? { ...b, assessment: updatedAssessment } : b
+            )
+          );
+        } catch (error) {
+          console.error(`Error fetching results for ${beach.id}`, error);
+        }
+      }
     };
+
     fetchData();
   }, []);
 
