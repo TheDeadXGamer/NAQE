@@ -13,24 +13,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const MapView = () => {
+/** @param {Object} props - The component props.
+ * @param {Badplatser} props.badplatser - The Badplatser instance.
+ * @returns {JSX.Element} The MapView component.
+**/
+const MapView = ({badplatser}) => {
   const [beaches, setBeaches] = useState([]);
-  const badplatser = new Badplatser();
-
+  const mapInstance = badplatser.getInstance();
   useEffect(() => {
-    const fetchData = async () => {
-      await badplatser.initializeBadplatserInstance();
-      const mapInstance = badplatser.getInstance();
-      const beachArray = Array.from(mapInstance.entries()).map(([id, [name, municipality, position]]) => ({
-        id,
-        name,
-        municipality,
-        position,
-      }));
-      setBeaches(beachArray);
-    };
-    fetchData();
-  }, []);
+    const beachArray = Array.from(mapInstance.entries()).map(([id, [name, municipality, position]]) => ({
+      id,
+      name,
+      municipality,
+      position,
+    }));
+    setBeaches(beachArray);
+  }, [mapInstance]);
 
   return (
     <div className="map">
