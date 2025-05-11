@@ -16,7 +16,7 @@ export class Badplatser {
 
       // Create a dictionary with id as the key and name as the value
       const dictionary = new Map();
-      (result.watersAndAdvisories || []).slice(0, 2000).forEach((item) => {
+      (result.watersAndAdvisories || []).slice(0, 200).forEach((item) => {
         dictionary.set(item.bathingWater.id, [item.bathingWater.name, item.bathingWater.municipality.name, item.bathingWater?.samplingPointPosition]);
       });
 
