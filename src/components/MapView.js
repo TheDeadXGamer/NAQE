@@ -1,34 +1,112 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { Badplatser } from './havApi';
 import 'leaflet/dist/leaflet.css';
-import { useFavorites } from '../context/FavouritesContext'; 
-import { useRecentPlaces } from '../context/RecentPlacesContext';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+// Marker icons
+const greenIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
-/** @param {Object} props - The component props.
- * @param {Badplatser} props.badplatser - The Badplatser instance.
- * @returns {JSX.Element} The MapView component.
-**/
-const MapView = ({badplatser}) => {
+const yellowIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const redIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const blueIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const grayIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const getIconByAssessment = (assessment) => {
+  if (!assessment) return grayIcon;
+  const normalized = assessment.trim().toLowerCase();
+  switch (normalized) {
+    case 'tjänligt':
+      return greenIcon;
+    case 'tjänligt m. anm.':
+      return yellowIcon;
+    case 'otjänligt':
+      return redIcon;
+    default:
+      return blueIcon;
+  }
+};
+
+const MapView = () => {
   const [beaches, setBeaches] = useState([]);
-  const mapInstance = badplatser.getInstance();
+  const badplatser = new Badplatser();
+
   useEffect(() => {
-    const beachArray = Array.from(mapInstance.entries()).map(([id, [name, municipality, position]]) => ({
-      id,
-      name,
-      municipality,
-      position,
-    }));
-    setBeaches(beachArray);
-  }, [mapInstance]);
+    const fetchData = async () => {
+      await badplatser.initializeBadplatserInstance();
+      const mapInstance = badplatser.getInstance();
+
+      const initialBeachArray = Array.from(mapInstance.entries()).map(
+        ([id, [name, municipality, position]]) => ({
+          id,
+          name,
+          municipality,
+          position,
+          assessment: null,
+        })
+      );
+
+      setBeaches(initialBeachArray);
+
+      // Progressive fetching of assessments
+      for (const beach of initialBeachArray) {
+        try {
+          const results = await badplatser.fetchResultsById(beach.id);
+          const latestResult = results.length > 0 ? results[0] : null;
+          const updatedAssessment = latestResult?.sampleAssessIdText || null;
+
+          setBeaches((prev) =>
+            prev.map((b) =>
+              b.id === beach.id ? { ...b, assessment: updatedAssessment } : b
+            )
+          );
+        } catch (error) {
+          console.error(`Error fetching results for ${beach.id}`, error);
+        }
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="map">
@@ -38,16 +116,28 @@ const MapView = ({badplatser}) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        {beaches.map(({ id, name, municipality, position }) => {
-          if (!position) return null;
-          return (
-            <Marker key={id} position={[position.latitude, position.longitude]}>
-              <Popup>
-                <BeachPopupContent id={id} name={name} municipality={municipality} position={position} />
-              </Popup>
-            </Marker>
-          );
-        })}
+        <MarkerClusterGroup chunkedLoading>
+          {beaches.map(({ id, name, municipality, position, assessment }) => {
+            if (!position) return null;
+            const icon = getIconByAssessment(assessment);
+            return (
+              <Marker
+                key={id}
+                position={[position.latitude, position.longitude]}
+                icon={icon}
+              >
+                <Popup>
+                  <BeachPopupContent
+                    id={id}
+                    name={name}
+                    municipality={municipality}
+                    position={position}
+                  />
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );
@@ -56,18 +146,11 @@ const MapView = ({badplatser}) => {
 const BeachPopupContent = ({ id, name, municipality, position }) => {
   const [results, setResults] = useState(null);
 
-  const { favorites, addFavorite, removeFavorite } = useFavorites();
-  const { addRecentPlace } = useRecentPlaces();
-
-  const isFavorite = (id) => favorites.some((item) => item.id === id);
-
   useEffect(() => {
     const fetchResults = async () => {
       const badplatser = new Badplatser();
       const res = await badplatser.fetchResultsById(id);
       setResults(res.length > 0 ? res[0] : null);
-
-      addRecentPlace({ id, name, municipality, position, stats: res.length > 0 ? res[0] : null });
     };
     fetchResults();
   }, [id]);
@@ -87,22 +170,6 @@ const BeachPopupContent = ({ id, name, municipality, position }) => {
           {results.pollutionTypeIdText && (
             <p><strong>Föroreningar:</strong> {results.pollutionTypeIdText}</p>
           )}
-          <button
-            onClick={() =>
-              isFavorite(id)
-                ? removeFavorite(id)
-                : addFavorite({
-                    id,
-                    name,
-                    municipality,
-                    position,
-                    stats: results,
-                  })
-        }
-  disabled={!results} // Disable button if stats are not yet loaded
->
-  {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
-</button>
         </>
       ) : (
         <p>Laddar data...</p>
