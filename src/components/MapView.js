@@ -4,8 +4,6 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { Badplatser } from './havApi';
 import 'leaflet/dist/leaflet.css';
-import { useFavorites } from '../context/FavouritesContext';
-import { useRecentPlaces } from '../context/RecentPlacesContext';
 
 // Marker icons
 const greenIcon = new L.Icon({
@@ -68,46 +66,47 @@ const getIconByAssessment = (assessment) => {
   }
 };
 
-const MapView = ({badplatser}) => {
+const MapView = () => {
   const [beaches, setBeaches] = useState([]);
-  const mapInstance = badplatser.getInstance();
-useEffect(() => {
-  const fetchData = async () => {
-    await badplatser.initializeBadplatserInstance();
-    const mapInstance = badplatser.getInstance();
+  const badplatser = new Badplatser();
 
-    const initialBeachArray = Array.from(mapInstance.entries()).map(
-      ([id, [name, municipality, position]]) => ({
-        id,
-        name,
-        municipality,
-        position,
-        assessment: null,
-      })
-    );
+  useEffect(() => {
+    const fetchData = async () => {
+      await badplatser.initializeBadplatserInstance();
+      const mapInstance = badplatser.getInstance();
 
-    setBeaches(initialBeachArray);
+      const initialBeachArray = Array.from(mapInstance.entries()).map(
+        ([id, [name, municipality, position]]) => ({
+          id,
+          name,
+          municipality,
+          position,
+          assessment: null,
+        })
+      );
 
-    // Progressive fetching of assessments
-    for (const beach of initialBeachArray) {
-      try {
-        const results = await badplatser.fetchResultsById(beach.id);
-        const latestResult = results.length > 0 ? results[0] : null;
-        const updatedAssessment = latestResult?.sampleAssessIdText || null;
+      setBeaches(initialBeachArray);
 
-        setBeaches((prev) =>
-          prev.map((b) =>
-            b.id === beach.id ? { ...b, assessment: updatedAssessment } : b
-          )
-        );
-      } catch (error) {
-        console.error(`Error fetching results for ${beach.id}`, error);
+      // Progressive fetching of assessments
+      for (const beach of initialBeachArray) {
+        try {
+          const results = await badplatser.fetchResultsById(beach.id);
+          const latestResult = results.length > 0 ? results[0] : null;
+          const updatedAssessment = latestResult?.sampleAssessIdText || null;
+
+          setBeaches((prev) =>
+            prev.map((b) =>
+              b.id === beach.id ? { ...b, assessment: updatedAssessment } : b
+            )
+          );
+        } catch (error) {
+          console.error(`Error fetching results for ${beach.id}`, error);
+        }
       }
-    }
-  };
+    };
 
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   return (
     <div className="map">
@@ -147,18 +146,11 @@ useEffect(() => {
 const BeachPopupContent = ({ id, name, municipality, position }) => {
   const [results, setResults] = useState(null);
 
-  const { favorites, addFavorite, removeFavorite } = useFavorites();
-  const { addRecentPlace } = useRecentPlaces();
-
-  const isFavorite = (id) => favorites.some((item) => item.id === id);
-
   useEffect(() => {
     const fetchResults = async () => {
       const badplatser = new Badplatser();
       const res = await badplatser.fetchResultsById(id);
       setResults(res.length > 0 ? res[0] : null);
-
-      addRecentPlace({ id, name, municipality, position, stats: res.length > 0 ? res[0] : null });
     };
     fetchResults();
   }, [id]);
@@ -178,22 +170,6 @@ const BeachPopupContent = ({ id, name, municipality, position }) => {
           {results.pollutionTypeIdText && (
             <p><strong>Föroreningar:</strong> {results.pollutionTypeIdText}</p>
           )}
-          <button
-            onClick={() =>
-              isFavorite(id)
-                ? removeFavorite(id)
-                : addFavorite({
-                    id,
-                    name,
-                    municipality,
-                    position,
-                    stats: results,
-                  })
-        }
-  disabled={!results} // Disable button if stats are not yet loaded
->
-  {isFavorite(id) ? 'Remove from Favorites' : 'Add to Favorites'}
-</button>
         </>
       ) : (
         <p>Laddar data...</p>
