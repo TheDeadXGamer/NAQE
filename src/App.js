@@ -12,7 +12,7 @@ import { saveFavorites } from './components/AccountCookies';
 
 
 function App() {
-  const [currentView, setCurrentView] = useState('login'); 
+  const [currentView, setCurrentView] = useState('loading'); 
   const [isLoggedIn, setIsLoggedIn] = useState(null); // State to manage login status, is null or username
 
   const badplatser = new Badplatser();
@@ -21,7 +21,9 @@ function App() {
     const fetchData = async () => {
     await badplatser.initializeBadplatserInstance(); // Initialize the instance
     };
-    fetchData().then(() => setCurrentView('map')); // Set the default view after data is fetched
+    fetchData().then(() => {
+      setCurrentView('login'); // Set the initial view to login after data is fetched
+    });
   }, []); // Only runs once
 
   return (
